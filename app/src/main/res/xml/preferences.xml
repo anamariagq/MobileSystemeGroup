@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SeekBarPreference
+        android:key="font_size"
+        android:title="Schriftgröße"
+        android:summary="Schriftgröße der Todo-Einträge"
+        android:defaultValue="16"
+        android:min="10"
+        android:max="30" />
+
+</PreferenceScreen>
