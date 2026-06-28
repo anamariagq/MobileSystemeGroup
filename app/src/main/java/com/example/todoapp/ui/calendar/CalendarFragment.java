@@ -73,7 +73,7 @@ public class CalendarFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendarView);
 
         //Viewmodel Initialize
-        calendarViewModel = new ViewModelProvider(this).get(CalendarViewModel.class);
+        calendarViewModel = new ViewModelProvider(getActivity()).get(CalendarViewModel.class);
 
         //Charge current Month on Fragment Open
         YearMonth currentMonth = YearMonth.now();
