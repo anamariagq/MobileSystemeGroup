@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_settings"
+        android:title="@string/settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_categories"
+        android:title="@string/kategorien"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_priorities"
+        android:title="Prioritäten"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_sort"
+        android:title="Sortieren"
+        app:showAsAction="never">
+
+        <menu>
+            <item android:id="@+id/sort_title" android:title="Nach Titel" />
+            <item android:id="@+id/sort_date" android:title="Nach Datum" />
+            <item android:id="@+id/sort_priority" android:title="Nach Priorität" />
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/menu_todos"
+        android:title="Todos verwalten"
+        app:showAsAction="never" />
+
+</menu>
