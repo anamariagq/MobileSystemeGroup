@@ -16,10 +16,22 @@ public class CalendarActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
 
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.calendarContainer, new CalendarFragment())
+                    .commit();
+        }
+    }
+}
+
+
+
+
+/*
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         fragmentTransaction.replace(R.id.calendarContainer, new CalendarFragment());
         fragmentTransaction.commit();
-    }
-}
+
+ */
