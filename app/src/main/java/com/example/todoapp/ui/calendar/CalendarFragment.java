@@ -80,16 +80,7 @@ public class CalendarFragment extends Fragment {
         calendarViewModel.loadTodosForMonth(currentMonth);
         textMonth.setText(formatMonth(currentMonth));
 
-
-        //Configure CalendarView
-        calendarView.setup(
-                currentMonth.minusMonths(12),
-                currentMonth.plusMonths(12),
-                DayOfWeek.MONDAY
-        );
-        calendarView.scrollToMonth(currentMonth);
-
-        //Day binder(click day)
+        //1.Day binder(click day)
         calendarView.setDayBinder(new MonthDayBinder<DayViewContainer>(){
             @Override
             public DayViewContainer create(View view){
@@ -108,7 +99,7 @@ public class CalendarFragment extends Fragment {
             }
         });
 
-        //Month scroll listener
+        //2.Month scroll listener
         calendarView.setMonthScrollListener(month-> {
             YearMonth yearMonth = month.getYearMonth();
             textMonth.setText(formatMonth(yearMonth));
@@ -116,6 +107,13 @@ public class CalendarFragment extends Fragment {
 
             return Unit.INSTANCE;
         });
+        //3.Configure CalendarView
+        calendarView.setup(
+                currentMonth.minusMonths(12),
+                currentMonth.plusMonths(12),
+                DayOfWeek.MONDAY
+        );
+        calendarView.scrollToMonth(currentMonth);
 
         //Observer monthly events
         calendarViewModel.getTodosForMonth().observe(getViewLifecycleOwner(), todos -> {

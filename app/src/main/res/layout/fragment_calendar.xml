@@ -21,7 +21,8 @@
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="256dp"
-        android:layout_marginTop="40dp"/>
+        android:layout_marginTop="40dp"
+        app:cv_dayViewResource="@layout/item_calendar_day"/>
 
     <ScrollView
         android:layout_width="match_parent"
