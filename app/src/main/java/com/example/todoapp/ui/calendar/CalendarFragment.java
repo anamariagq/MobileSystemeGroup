@@ -1,8 +1,8 @@
 package com.example.todoapp.ui.calendar;
 
 import android.graphics.Color;
-import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.graphics.Typeface;import android.os.Bundle;
+import android.view.Gravity;import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 //import android.widget.CalendarView;
@@ -44,7 +44,7 @@ import java.time.YearMonth;
 //import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 //import java.util.Date;
-import java.util.Locale;
+import java.time.format.TextStyle;import java.util.Locale;
 
 import kotlin.Unit;
 
@@ -137,6 +137,35 @@ public class CalendarFragment extends Fragment {
                 todoContainer.addView(item);
             }
         });
+
+        //to find Xml dynamic container for the Calendar days
+        LinearLayout titlesContainer = view.findViewById(R.id.titlesContainer);
+
+        DayOfWeek[] daysOfWeeks = DayOfWeek.values();
+
+        for (DayOfWeek dayOfWeek : daysOfWeeks){
+            TextView textView = new TextView(getContext());
+            //For Days to use same space
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+            );
+            textView.setLayoutParams(params);
+            textView.setGravity(Gravity.CENTER);
+            textView.setTypeface(null, Typeface.BOLD);
+            textView.setTextColor(Color.DKGRAY);
+
+            //TextStyleShort to extract official abbreviation from system
+            String dayName = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault());
+            textView.setText(dayName);
+
+            //to Add TextView to the thing
+            titlesContainer.addView(textView);
+        }
+
+
+
+
+
 
         return view;
     }
