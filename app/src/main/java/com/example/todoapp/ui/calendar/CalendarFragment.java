@@ -162,10 +162,17 @@ public class CalendarFragment extends Fragment {
             titlesContainer.addView(textView);
         }
 
-
-
-
-
+        View scrollView = (View) view.findViewById(R.id.todoContainer).getParent();
+        if (scrollView != null) {
+            scrollView.setOnTouchListener((v, event) -> {
+                // Touch to CalendarActivity
+                if (getActivity() instanceof CalendarActivity) {
+                    ((CalendarActivity) getActivity()).registrerTouch(event);
+                }
+                //False to not avoid scrolling
+                return false;
+            });
+        }
 
         return view;
     }
