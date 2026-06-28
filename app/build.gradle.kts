@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    implementation("com.kizitonwose.calendar:view:2.0.0")
+    implementation("com.kizitonwose.calendar:view:2.5.0")
 
     //UI libs for sdk 34
     implementation("androidx.activity:activity-ktx:1.9.0")
@@ -46,16 +46,9 @@ dependencies {
     implementation("androidx.preference:preference:1.2.1")
 
     //AndroidX core libs
-    implementation("androidx.core:core:1.13.1")
     implementation("androidx.core:core-ktx:1.13.1")
 
     //new libs replacements
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4") // <-- ¡AQUÍ ESTÁ!
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")       // <-- ¡AQUÍ ESTÁ!
-    implementation("androidx.preference:preference:1.2.1")
-
     //Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
