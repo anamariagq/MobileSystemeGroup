@@ -65,14 +65,3 @@ public class CalendarActivity extends AppCompatActivity {
 
 }
 
-
-
-
-/*
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        fragmentTransaction.replace(R.id.calendarContainer, new CalendarFragment());
-        fragmentTransaction.commit();
-
- */

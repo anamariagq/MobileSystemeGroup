@@ -2,8 +2,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="48dp">
+    android:padding="2dp">
 
+    <!--numberday-->
     <TextView
         android:id="@+id/calendarDayText"
         android:layout_width="40dp"
@@ -12,6 +13,16 @@
         android:gravity="center"
         android:textSize="16sp"
         android:textColor="@android:color/black"/>
+
+    <!--point for a day with todos: only one point, also when more todos-->
+    <View
+        android:id="@+id/calendarDotIndicator"
+        android:layout_width="6dp"
+        android:layout_height="6dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="4dp"
+        android:background="@color/orange"
+        android:visibility="invisible"/>
 
 </FrameLayout>
 

@@ -5,7 +5,7 @@ import android.graphics.Typeface;import android.os.Bundle;
 import android.view.Gravity;import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-//import android.widget.CalendarView;
+
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -20,31 +20,21 @@ import com.kizitonwose.calendar.core.CalendarDay;
 import com.kizitonwose.calendar.view.CalendarView;
 import com.kizitonwose.calendar.view.MonthDayBinder; // Reemplaza al antiguo DayBinder
 import com.kizitonwose.calendar.view.ViewContainer;
-//import com.kizitonwose.calendar.view.CalendarView;
-//import com.kizitonwose.calendar.core.CalendarDay;
-import com.kizitonwose.calendar.core.CalendarMonth;
-//import com.kizitonwose.calendar.view.DayBinder;
-//import com.kizitonwose.calendar.view.ui.ViewContainer;
-
-
-
-
-//import com.github.sundeepk.compactcalendarview.CompactCalendarView;
-//import com.github.sundeepk.compactcalendarview.domain.Event;
 
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 
-import org.intellij.lang.annotations.JdkConstants;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-//import java.time.ZoneId;
+
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-//import java.util.Date;
-import java.time.format.TextStyle;import java.util.Locale;
+import java.time.format.TextStyle;
+import java.util.List;
+import java.util.Locale;
 
 import kotlin.Unit;
 
@@ -80,18 +70,58 @@ public class CalendarFragment extends Fragment {
         calendarViewModel.loadTodosForMonth(currentMonth);
         textMonth.setText(formatMonth(currentMonth));
 
+        //Here is important to keep with the order: 1, 2, 3!
         //1.Day binder(click day)
         calendarView.setDayBinder(new MonthDayBinder<DayViewContainer>(){
+            @NonNull
             @Override
-            public DayViewContainer create(View view){
+            public DayViewContainer create(@NonNull View view){
                 return new DayViewContainer(view);
             }
+
             @Override
-            public void bind(DayViewContainer container, CalendarDay day){
-                container.textView.setText(String.valueOf(day.getDate().getDayOfMonth()));
+            public void bind(@NonNull DayViewContainer container, @NonNull CalendarDay day){
+
+                LocalDate date = day.getDate();
+
+                //Show number of day on TexView
+                container.calendarDayText.setText(String.valueOf(day.getDate().getDayOfMonth()));
+
+                //Point when there´s one or more todos on a day
+                boolean hasTodos = false;
+
+                //lo adapt dueDate to date --> not null
+                long startOfDayMillis = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+                long endOfDayMillis = date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()-1;
+
+                //to obtain todos List of the Month from ViewModel
+                List<TodoWithCategory> monthsTodo = calendarViewModel.getTodosForMonth().getValue();
+
+                if(monthsTodo != null){
+                    for(TodoWithCategory todo : monthsTodo){
+                        //Temporal Log to check for null
+                        android.util.Log.d("CALENDAR_TEST", "Day: " + date + " | Todo Due: " + todo.dueDate + " | Range: " + startOfDayMillis + " at " + endOfDayMillis);
+                        if(todo.dueDate >= startOfDayMillis && todo.dueDate <= endOfDayMillis){
+                            hasTodos = true;
+                            break;
+                        }
+                    }
+                }
+                //paint or not a point depending on the result
+                if(container.calendarDotIndicator != null) {
+                    if (hasTodos) {
+                        container.calendarDotIndicator.setVisibility(View.VISIBLE);
+                        //to assure dot at the front
+                        container.calendarDotIndicator.bringToFront();
+                    } else {
+                        container.calendarDotIndicator.setVisibility(View.INVISIBLE);
+                    }
+                }
+
+
+
 
                 container.getView().setOnClickListener(v -> {
-                    LocalDate date = day.getDate();
                     YearMonth yearMonth = YearMonth.from(date);
                     textMonth.setText(formatMonth(yearMonth));
                     calendarViewModel.loadTodosForDate(date);
@@ -117,7 +147,14 @@ public class CalendarFragment extends Fragment {
 
         //Observer monthly events
         calendarViewModel.getTodosForMonth().observe(getViewLifecycleOwner(), todos -> {
-            //Para trabajar despues
+            //Sync with Room Info
+
+            if(todos != null) {
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    calendarView.notifyCalendarChanged();
+                });
+            }
+
         });
 
         //Observer daily todos
@@ -183,13 +220,15 @@ public class CalendarFragment extends Fragment {
         return yearMonth.format(formatter);
     }
 
-    //Container for each day
+    //Container Class for each day and points
     public static class DayViewContainer extends ViewContainer {
-        TextView textView;
+        public final TextView calendarDayText;
+        public final View calendarDotIndicator;
 
         public DayViewContainer(View view) {
             super(view);
-            textView = view.findViewById(R.id.calendarDayText);
+            this.calendarDayText = view.findViewById(R.id.calendarDayText);
+            this.calendarDotIndicator = view.findViewById(R.id.calendarDotIndicator);
         }
     }
 }
