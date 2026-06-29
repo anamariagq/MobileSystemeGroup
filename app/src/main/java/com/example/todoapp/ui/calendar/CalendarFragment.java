@@ -33,6 +33,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,107 +43,95 @@ public class CalendarFragment extends Fragment {
     //private CompactCalendarView compactCalendarView;
     private CalendarView calendarView;
     private CalendarViewModel calendarViewModel;
-
     private TextView textMonth;
     private LinearLayout todoContainer;
-
-    //Global Variable for selectedDates
+    //Global Variable for selectedDates by User
     private LocalDate selectedDate = null;
 
+    //Local list to paint the calendar points with no blocking the DB
+    private List<TodoWithCategory> currentMonthTodosList = new ArrayList<>();
 
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                             @Nullable Bundle savedInstanceState){
+        return inflater.inflate(R.layout.fragment_calendar, container, false);
+    }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-
-        View view = inflater.inflate(R.layout.fragment_calendar, container, false);
-
-        //UI Calendar References
+        // UI References
         textMonth = view.findViewById(R.id.textMonth);
         todoContainer = view.findViewById(R.id.todoContainer);
         calendarView = view.findViewById(R.id.calendarView);
+        LinearLayout titlesContainer = view.findViewById(R.id.titlesContainer);
 
-        //Viewmodel Initialize
+        // ViewModel Initialization
         calendarViewModel = new ViewModelProvider(requireActivity()).get(CalendarViewModel.class);
 
-        //Charge current Month on Fragment Open
+        // Charge current Month on Open
         YearMonth currentMonth = YearMonth.now();
         calendarViewModel.loadTodosForMonth(currentMonth);
         textMonth.setText(formatMonth(currentMonth));
 
-        //Here is important to keep with the order: 1, 2, 3!
-        //1.Day binder(click day)
-        calendarView.setDayBinder(new MonthDayBinder<DayViewContainer>(){
+        //Day Binder to draw the points and gestion of clicks
+        calendarView.setDayBinder(new MonthDayBinder<DayViewContainer>() {
             @NonNull
             @Override
-            public DayViewContainer create(@NonNull View view){
+            public DayViewContainer create(@NonNull View view) {
                 return new DayViewContainer(view);
             }
 
             @Override
-            public void bind(@NonNull DayViewContainer container, @NonNull CalendarDay day){
-
+            public void bind(@NonNull DayViewContainer container, @NonNull CalendarDay day) {
                 LocalDate date = day.getDate();
-                //Show number of day on TexView
-                container.calendarDayText.setText(String.valueOf(day.getDate().getDayOfMonth()));
+                container.calendarDayText.setText(String.valueOf(date.getDayOfMonth()));
 
-                //Point when there´s one or more todos on a day
+                // Comprobation of points using the memorylist
                 boolean hasTodos = false;
-
-                //lo adapt dueDate to date --> not null
                 long startOfDayMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-                long endOfDayMillis = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()-1;
+                long endOfDayMillis = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
 
-                //to obtain todos List of the Month from ViewModel
-                List<TodoWithCategory> monthsTodo = calendarViewModel.getTodosForMonth().getValue();
-
-                if(monthsTodo != null){
-                    for(TodoWithCategory todo : monthsTodo){
-                        //Temporal Log to check for null
-                        //android.util.Log.d("CALENDAR_TEST", "Day: " + date + " | Todo Due: " + todo.dueDate + " | Range: " + startOfDayMillis + " at " + endOfDayMillis);
-                        if(todo.dueDate >= startOfDayMillis && todo.dueDate <= endOfDayMillis){
-                            hasTodos = true;
-                            break;
-                        }
+                for (TodoWithCategory todo : currentMonthTodosList) {
+                    if (todo.dueDate >= startOfDayMillis && todo.dueDate <= endOfDayMillis) {
+                        hasTodos = true;
+                        break;
                     }
                 }
 
-                //paint or not a point depending on the result
-                if(container.calendarDotIndicator != null) {
-                    if (hasTodos) {
-                        container.calendarDotIndicator.setVisibility(View.VISIBLE);
-                        //to assure dot at the front
-                        container.calendarDotIndicator.bringToFront();
-                    } else {
-                        container.calendarDotIndicator.setVisibility(View.INVISIBLE);
-                    }
+                if (hasTodos) {
+                    container.calendarDotIndicator.setVisibility(View.VISIBLE);
+                    container.calendarDotIndicator.bringToFront();
+                } else {
+                    container.calendarDotIndicator.setVisibility(View.INVISIBLE);
                 }
 
+                // Light click to not break the swipe
                 container.getView().setOnClickListener(v -> {
-                    //Logik to update the month
                     YearMonth yearMonth = YearMonth.from(date);
                     textMonth.setText(formatMonth(yearMonth));
+
                     selectedDate = date;
                     calendarViewModel.loadTodosForDate(date);
-                    //updateUnderCalendarList();
 
-
+                    //To force and redray the underlist
+                    renderDailyTodosUnderCalendar();
                 });
             }
         });
 
-        //2.Month scroll listener
-        calendarView.setMonthScrollListener(month-> {
+        //Month Scroll Listener
+        calendarView.setMonthScrollListener(month -> {
             YearMonth yearMonth = month.getYearMonth();
             textMonth.setText(formatMonth(yearMonth));
             calendarViewModel.loadTodosForMonth(yearMonth);
-
             return Unit.INSTANCE;
         });
-        //3.Configure CalendarView
+
+        //Configure CalendarView Range
         calendarView.setup(
                 currentMonth.minusMonths(12),
                 currentMonth.plusMonths(12),
@@ -150,26 +139,27 @@ public class CalendarFragment extends Fragment {
         );
         calendarView.scrollToMonth(currentMonth);
 
-        //Observer monthly events
-        calendarViewModel.getTodosForMonth().observe(getViewLifecycleOwner(), todos -> {//todos
-            //Sync with Room Info
-            if(todos != null) {
+        // Observer of Monthly Events for points and Lists
+        calendarViewModel.getTodosForMonth().observe(getViewLifecycleOwner(), todos -> {
+            if (todos != null) {
+                // Save List on for daybinder
+                currentMonthTodosList = todos;
+
+                // for notification to draw the points
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                     calendarView.notifyCalendarChanged();
                 });
-            }
 
+                // to update when user already selcted another day
+                renderDailyTodosUnderCalendar();
+            }
         });
 
-
-        //to find Xml dynamic container for the Calendar days
-        LinearLayout titlesContainer = view.findViewById(R.id.titlesContainer);
-
+        //Inflate days
         DayOfWeek[] daysOfWeeks = DayOfWeek.values();
-
-        for (DayOfWeek dayOfWeek : daysOfWeeks){
+        titlesContainer.removeAllViews(); // Limpieza preventiva
+        for (DayOfWeek dayOfWeek : daysOfWeeks) {
             TextView textView = new TextView(getContext());
-            //For Days to use same space
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
             );
@@ -178,36 +168,58 @@ public class CalendarFragment extends Fragment {
             textView.setTypeface(null, Typeface.BOLD);
             textView.setTextColor(Color.DKGRAY);
 
-            //TextStyleShort to extract official abbreviation from system
             String dayName = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault());
             textView.setText(dayName);
-
-            //to Add TextView to the thing
             titlesContainer.addView(textView);
         }
 
+        // 6.Configurate Scroll Intercept for accesability and touch
         View scrollView = (View) view.findViewById(R.id.todoContainer).getParent();
         if (scrollView != null) {
             scrollView.setOnTouchListener((v, event) -> {
-                // Touch to CalendarActivity
                 if (getActivity() instanceof CalendarActivity) {
                     ((CalendarActivity) getActivity()).registrerTouch(event);
                 }
-                //False to not avoid scrolling
+                if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                    v.performClick();
+                }
                 return false;
             });
         }
-
-        return view;
     }
 
-    private String formatMonth(YearMonth yearMonth){
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault());
+    // Process and print Todos of selected day under the calendar
+    private void renderDailyTodosUnderCalendar() {
+        todoContainer.removeAllViews();
+
+        if (selectedDate != null && !currentMonthTodosList.isEmpty()) {
+            long startOfDay = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long endOfDay = selectedDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
+
+            for (TodoWithCategory todo : currentMonthTodosList) {
+                if (todo.dueDate >= startOfDay && todo.dueDate <= endOfDay) {
+                    //inflate row desing
+                    View item = getLayoutInflater().inflate(R.layout.item_todo, todoContainer, false);
+                    //Only Text Title Todo
+                    TextView title = item.findViewById(R.id.tvTodoTitle);
+                    title.setText(todo.title);
+
+                    //android.widget.ImageView categoryIcon = item.findViewById(R.id.ivCategoryIcon);
+                    //category.setText(todo.categoryName);
+
+                    todoContainer.addView(item);
+                }
+            }
+            todoContainer.requestLayout();
+        }
+    }
+
+    private String formatMonth(YearMonth yearMonth) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault());
         return yearMonth.format(formatter);
     }
 
-    //Container Class for each day and points
+    // ViewHolder optimized
     public static class DayViewContainer extends ViewContainer {
         public final TextView calendarDayText;
         public final View calendarDotIndicator;
@@ -218,41 +230,8 @@ public class CalendarFragment extends Fragment {
             this.calendarDotIndicator = view.findViewById(R.id.calendarDotIndicator);
         }
     }
-
-    //to show the TodoList of the Day under Calendar
-    /*
-    private void updateUnderCalendarList(){
-        todoContainer.removeAllViews();
-
-        //Obtain the list of all month
-
-        List<TodoWithCategory> monthlyTodo = calendarViewModel.getTodosForMonth().getValue();
-
-        if (monthlyTodo != null && selectedDate != null){
-            long startOfDay = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            long endOfDay = selectedDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() - 1;
-
-            for (TodoWithCategory todo : monthlyTodo) {
-                // Verificar si la tarea cae dentro de este día
-                if (todo.dueDate >= startOfDay && todo.dueDate <= endOfDay) {
-                    // Inflar el diseño de la tarea
-                    View item = getLayoutInflater().inflate(R.layout.item_todo, todoContainer, false);
-
-                    TextView title = item.findViewById(R.id.tvTodoTitle);
-                    title.setText(todo.title);
-
-                    TextView category = item.findViewById(R.id.ivCategoryIcon);
-                    category.setText(todo.categoryName);
-
-                    // Insertar el elemento visual debajo del calendario
-                    todoContainer.addView(item);
-                }
-            }
-
-            todoContainer.requestLayout();
-
-        }
-
-    }*/
-
 }
+
+
+
+
