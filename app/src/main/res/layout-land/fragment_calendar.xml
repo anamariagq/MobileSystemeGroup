@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:weightSum="2">
+
+
+    <!--Column Left : Calendar-->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="1dp">
+
+
+        <TextView
+            android:id="@+id/textMonth"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginTop="1dp"
+            android:text="Monat"
+            android:gravity="center"
+            android:textColor="@android:color/black"/>
+
+        <!--Days of the week-->
+
+        <LinearLayout
+            android:id="@+id/titlesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="7"
+            android:layout_marginTop="1dp"/>
+
+        <!--Calendar-->
+        <com.kizitonwose.calendar.view.CalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            app:cv_dayViewResource="@layout/item_calendar_day"/>
+    </LinearLayout>
+
+    <!--Right Column for Todos View-->
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:background="@color/white"
+        android:layout_marginTop="16dp">
+
+        <LinearLayout
+            android:id="@+id/todoContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp"/>
+    </ScrollView>
+
+</LinearLayout>
+    <!--xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.calendar.CalendarFragment"-->

@@ -157,7 +157,7 @@ public class CalendarFragment extends Fragment {
 
         //Inflate days
         DayOfWeek[] daysOfWeeks = DayOfWeek.values();
-        titlesContainer.removeAllViews(); // Limpieza preventiva
+        titlesContainer.removeAllViews(); //  Preventiva Cleaning
         for (DayOfWeek dayOfWeek : daysOfWeeks) {
             TextView textView = new TextView(getContext());
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
